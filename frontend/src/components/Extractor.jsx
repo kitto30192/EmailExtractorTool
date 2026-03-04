@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Extractor.css'; // Make sure this matches your CSS filename
-
+import './Extractor.css';
 
 const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
 
@@ -74,72 +73,77 @@ function Extractor() {
   };
 
   return (
-    <div className="extractor-container">
-      {/* Header */}
-      <div className="extractor-header">
-        <h2>Bulk Email Extractor</h2>
-        <button onClick={handleLogout} className="btn btn-logout">
-          Logout
-        </button>
-      </div>
-      
-      {/* Interactive Upload Zone */}
-      <div 
-        className={`upload-zone ${file ? 'has-file' : ''}`} 
-        onClick={handleBrowse}
-      >
-        <p className="file-status">
-          {file ? (
-            <span className="file-status-success">
-              📄 <strong>{file.name}</strong> loaded. Ready to extract.
-            </span>
-          ) : (
-            <span>📁 Click here to browse and upload your domain list (.xlsx, .xls)</span>
-          )}
-        </p>
-        {isExtracting && (
-          <p className="extracting-text">
-            ⏳ Extracting emails... This process takes time depending on the list size.
-          </p>
-        )}
-      </div>
-
-      {/* Hidden File Input */}
-      <input 
-        type="file" 
-        accept=".xlsx, .xls" 
-        style={{ display: 'none' }} 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-      />
-
-      {/* Action Buttons */}
-      <div className="button-group">
-        <button 
-          onClick={handleClearAll} 
-          disabled={isExtracting || (!file && !downloadUrl)} 
-          className="btn btn-clear"
-        >
-          Clear All
-        </button>
+    <div className="extractor-page-wrapper">
+      <div className="extractor-card">
         
-        <button 
-          onClick={handleExtract} 
-          disabled={!file || isExtracting} 
-          className="btn btn-primary"
-        >
-          {isExtracting ? 'Extracting...' : 'Extract Emails'}
-        </button>
-        
-        {downloadUrl ? (
-          <a href={downloadUrl} download="extracted_emails.xlsx" className="btn btn-download">
-            ⬇️ Download Results
-          </a>
-        ) : (
-          <button disabled={true} className="btn btn-download-disabled">
-            ⬇️ Download Results
+        {/* Header */}
+        <div className="extractor-header">
+          <h2>Bulk Email Extractor</h2>
+          <button onClick={handleLogout} className="btn-logout">
+            Logout
           </button>
-        )}
+        </div>
+        
+        {/* Interactive Upload Zone */}
+        <div 
+          className={`upload-zone ${file ? 'has-file' : ''}`} 
+          onClick={handleBrowse}
+        >
+          <p className="file-status">
+            {file ? (
+              <span className="file-status-success">
+                📄 <strong>{file.name}</strong> loaded. Ready to extract.
+              </span>
+            ) : (
+              <span>📁 Click here to browse and upload your domain list (.xlsx, .xls)</span>
+            )}
+          </p>
+          {isExtracting && (
+            <p className="extracting-text">
+              ⏳ Extracting emails... This process takes time depending on the list size.
+            </p>
+          )}
+        </div>
+
+        {/* Hidden File Input */}
+        <input 
+          type="file" 
+          accept=".xlsx, .xls" 
+          style={{ display: 'none' }} 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+        />
+
+        {/* Action Buttons */}
+        <div className="button-group">
+          <button 
+            onClick={handleClearAll} 
+            disabled={isExtracting || (!file && !downloadUrl)} 
+            className="btn-action btn-secondary"
+          >
+            Clear
+          </button>
+          
+          <button 
+            onClick={handleExtract} 
+            disabled={!file || isExtracting} 
+            className="btn-action btn-primary"
+          >
+            {isExtracting ? 'Extracting...' : 'Extract Emails'}
+          </button>
+          
+          {/* Download Button drops to full width on a new line */}
+          {downloadUrl ? (
+            <a href={downloadUrl} download="extracted_emails.xlsx" className="btn-action btn-download">
+              ⬇️ Download Results
+            </a>
+          ) : (
+            <button disabled={true} className="btn-action btn-download-disabled">
+              ⬇️ Download Results
+            </button>
+          )}
+        </div>
+
       </div>
     </div>
   );

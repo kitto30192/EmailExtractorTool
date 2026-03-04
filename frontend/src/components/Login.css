@@ -1,48 +1,65 @@
+/* Page Background */
 .login-page-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #333;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 400px;
-  padding: 40px;
-  background-color: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  min-height: 100vh;
+  background-color: #f0f4f8; /* Soft background to make the card pop */
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
   box-sizing: border-box;
 }
 
-.login-header {
-  text-align: center;
-  margin-bottom: 32px;
+/* Main Split Card */
+.login-card {
+  display: flex;
+  width: 100%;
+  max-width: 800px;
+  min-height: 400px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  overflow: hidden; /* Keeps the inner panels inside the rounded corners */
+}
+
+/* Left Panel - Illustration */
+.illustration-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 40px;
+  position: relative;
+}
+
+/* Right Panel - Form */
+.form-panel {
+  flex: 1;
+  background-color: #145dec; /* Vibrant Blue from the image */
+  padding: 60px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #ffffff;
 }
 
 .login-header h2 {
-  margin: 0 0 8px 0;
-  font-size: 1.75rem;
-  color: #111827;
-}
-
-.login-header p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.95rem;
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0 0 40px 0;
+  color: #ffffff;
 }
 
 .error-banner {
-  background-color: #fef2f2;
-  color: #ef4444;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #d32f2f;
+  padding: 12px 20px;
+  border-radius: 30px;
+  margin-bottom: 25px;
   font-size: 0.9rem;
+  font-weight: 600;
   text-align: center;
-  border: 1px solid #fecaca;
 }
 
 .login-form {
@@ -51,67 +68,100 @@
   gap: 20px;
 }
 
+/* Pill-shaped Inputs */
 .input-group {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
 }
 
-.input-group label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #4b5563;
+.input-icon {
+  position: absolute;
+  left: 20px;
+  width: 20px;
+  height: 20px;
+  fill: #a0bbf8; /* Light blue icon color */
+  z-index: 2;
 }
 
 .form-input {
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+  width: 100%;
+  padding: 16px 20px 16px 50px; /* Left padding makes room for the icon */
+  border-radius: 50px; /* Fully rounded pill shape */
+  border: none;
   font-size: 1rem;
-  transition: all 0.2s ease;
+  background-color: #ffffff;
+  color: #333333;
   outline: none;
-  background-color: #f9fafb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #a0bbf8;
+  font-weight: 500;
 }
 
 .form-input:focus {
-  border-color: #3b82f6;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
 }
 
-.btn-submit {
-  margin-top: 10px;
-  padding: 12px;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
+/* Button Group Side-by-Side */
+.button-group {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 50px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-submit:hover {
-  background-color: #2563eb;
-}
-
-.toggle-container {
-  margin-top: 24px;
+  transition: all 0.2s ease;
   text-align: center;
-  font-size: 0.9rem;
-  color: #6b7280;
 }
 
-.toggle-link {
-  color: #3b82f6;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: 5px;
-  transition: color 0.2s ease;
+/* Yellow Active Button */
+.btn-primary {
+  background-color: #ffb800;
+  color: #1a1a1a;
+  border: none;
+  box-shadow: 0 4px 10px rgba(255, 184, 0, 0.3);
 }
 
-.toggle-link:hover {
-  color: #1d4ed8;
-  text-decoration: underline;
+.btn-primary:hover {
+  background-color: #e6a600;
+  transform: translateY(-2px);
+}
+
+/* Outlined Secondary Button */
+.btn-secondary {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 800px) {
+  .login-card {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .illustration-panel {
+    display: none; /* Hide image on small screens to save space */
+  }
+  .form-panel {
+    padding: 40px 30px;
+  }
+  .button-group {
+    flex-direction: column; /* Stack buttons on very small screens */
+  }
 }

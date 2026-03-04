@@ -1,127 +1,189 @@
-.extractor-container {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 32px;
-  background-color: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #333;
+/* Page Background */
+.extractor-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f4f8; /* Soft background to make the card pop */
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Centered Single-Column Card */
+.extractor-card {
+  width: 100%;
+  max-width: 650px; /* Wider than login, but not full screen */
+  background-color: #145dec; /* Vibrant Blue */
+  border-radius: 20px;
+  padding: 40px 50px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
 }
 
 .extractor-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 20px;
 }
 
 .extractor-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
   margin: 0;
-  font-size: 1.5rem;
-  color: #111827;
+  color: #ffffff;
 }
 
-.btn {
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-logout {
-  background-color: #fee2e2;
-  color: #ef4444;
-}
-
-.btn-logout:hover { background-color: #fecaca; }
-
+/* Upload Zone adapted for dark background */
 .upload-zone {
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  padding: 40px 20px;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 60px 20px;
   text-align: center;
-  background-color: #f8fafc;
+  background-color: rgba(255, 255, 255, 0.05);
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 24px;
+  transition: all 0.3s ease;
+  margin-bottom: 30px;
 }
 
 .upload-zone:hover {
-  border-color: #3b82f6;
-  background-color: #eff6ff;
+  border-color: #ffb800; /* Yellow hover state */
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .upload-zone.has-file {
-  border-color: #10b981;
-  background-color: #ecfdf5;
+  border-color: #10b981; /* Success Green */
+  background-color: rgba(16, 185, 129, 0.1);
 }
 
 .file-status {
   margin: 0;
   font-weight: 500;
-  color: #475569;
+  font-size: 1.1rem;
+  color: #ffffff;
 }
 
-.file-status-success { color: #059669; }
+.file-status-success {
+  color: #a7f3d0;
+}
 
 .extracting-text {
-  color: #d97706;
-  font-size: 0.9rem;
-  margin-top: 12px;
-  font-weight: 500;
+  color: #10d254;
+  font-size: 1rem;
+  margin-top: 15px;
+  font-weight: 600;
   animation: pulse 2s infinite;
 }
 
+/* Button Styling */
 .button-group {
   display: flex;
-  gap: 12px;
+  gap: 15px;
   flex-wrap: wrap;
 }
 
-.btn-clear {
-  background-color: #f1f5f9;
-  color: #475569;
+.btn-action {
+  padding: 14px 20px;
+  border-radius: 50px; /* Pill shape */
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.btn-clear:hover:not(:disabled) { background-color: #e2e8f0; }
 
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Small Header Button */
+.btn-logout {
+  padding: 8px 16px;
+  border-radius: 50px;
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+}
+
+/* Green Primary Button */
+/* Ultra-Vibrant Green Primary Button */
 .btn-primary {
-  background-color: #3b82f6;
-  color: white;
-  flex: 1; /* Makes it stretch */
+  flex: 2;
+  background-color: #00e676; /* Bright, luminous green */
+  color: #003314; /* Very dark text for sharp, easy-to-read contrast */
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4); /* Green glow effect */
 }
-.btn-primary:hover:not(:disabled) { background-color: #2563eb; }
 
-.btn-download {
-  background-color: #10b981;
-  color: white;
-  text-decoration: none;
-  flex: 1;
+.btn-primary:hover:not(:disabled) {
+  background-color: #00c853; /* Slightly deeper green on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 230, 118, 0.6); /* Larger glow on hover */
 }
-.btn-download:hover { background-color: #059669; }
+/* Outline Secondary Button */
+.btn-secondary {
+  flex: 1;
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Solid White Success Button */
+.btn-download {
+  width: 100%;
+  background-color: #ffffff;
+  color: #145dec;
+  text-decoration: none;
+  margin-top: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn-download:hover {
+  background-color: #f0f4f8;
+  transform: translateY(-2px);
+}
 
 .btn-download-disabled {
-  background-color: #f1f5f9;
-  color: #94a3b8;
-  flex: 1;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 10px;
 }
 
 @keyframes pulse {
   0% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.6; }
   100% { opacity: 1; }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .extractor-card {
+    padding: 30px 20px;
+  }
 }
