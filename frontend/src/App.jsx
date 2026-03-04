@@ -3,6 +3,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Extractor from './components/Extractor';
 
+
+
+const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+
 // New component to verify the HttpOnly cookie with the backend
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -10,7 +14,7 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const verifyUser = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/verify/', {
+        const response = await fetch(`${baseUrl}/api/verify/`, {
           // This line is MANDATORY for cookies
           credentials: 'include' 
         });

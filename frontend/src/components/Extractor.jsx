@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Extractor.css'; // Make sure this matches your CSS filename
 
+
+const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+
 function Extractor() {
   const [file, setFile] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -11,7 +14,7 @@ function Extractor() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:8000/api/logout/', {
+      await fetch(`${baseUrl}/api/logout/`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -45,7 +48,7 @@ function Extractor() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8000/api/extract/', {
+      const response = await fetch(`${baseUrl}/api/extract/`, {
         method: 'POST',
         credentials: 'include', 
         body: formData,
@@ -62,6 +65,7 @@ function Extractor() {
         alert('Extraction failed. Please ensure the Excel format is correct.');
       }
     } catch (error) {
+      console.log(error);
       console.error('Error during extraction:', error);
       alert('Network error. Is the backend server running?');
     } finally {

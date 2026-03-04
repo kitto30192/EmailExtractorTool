@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css'; // Make sure this matches your CSS filename
 
+
+
+const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -15,7 +19,7 @@ function Login() {
     const endpoint = isLogin ? '/api/login/' : '/api/signup/';
 
     try {
-      const response = await fetch(`http://localhost:8000${endpoint}`, {
+      const response = await fetch(`${baseUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // REQUIRED: tells the browser to accept the incoming HttpOnly cookie
