@@ -22,6 +22,7 @@ function Extractor() {
           if (response.ok) {
               console.log("Logged out successfully");
               // Redirect user back to the login page here
+              navigate('/login');
           }
       } catch (error) {
           console.error("Logout failed:", error);
