@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Extractor.css';
 
-const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+//const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+const baseUrl = " http://127.0.0.1:8000";
 
 function Extractor() {
   const [file, setFile] = useState(null);
@@ -12,15 +13,19 @@ function Extractor() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    try {
-      await fetch(`${baseUrl}/api/logout/`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-      navigate('/login');
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+      try {
+          const response = await fetch(`${baseUrl}/api/logout/`, {
+              method: 'POST',
+              credentials: 'include', // <-- CRITICAL FOR DELETING COOKIES
+          });
+
+          if (response.ok) {
+              console.log("Logged out successfully");
+              // Redirect user back to the login page here
+          }
+      } catch (error) {
+          console.error("Logout failed:", error);
+      }
   };
 
   const handleBrowse = () => fileInputRef.current.click();

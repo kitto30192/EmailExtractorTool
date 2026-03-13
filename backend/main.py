@@ -107,7 +107,13 @@ async def login(user: User, response: Response):
 
 @app.post("/api/logout/")
 async def logout(response: Response):
-    response.delete_cookie("access_token")
+    # The rules here must perfectly match the rules used in login()
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        samesite="none",
+        secure=True
+    )
     return {"message": "Logged out successfully"}
 
 @app.get("/api/verify/")
@@ -136,10 +142,14 @@ def get_current_user(request: Request):
 # --- EXTRACTION LOGIC ---
 
 
-def check_pages_and_extract(domain: str, browser) -> str:
+async def check_pages_and_extract_async(domain: str, context, semaphore) -> str:
     """
-    Visits the domain to extract emails from the full HTML source code.
+    ASYNC Optimized version: Runs concurrently, blocks images/CSS, and uses early exits.
     """
+    # 1. Skip blank rows instantly
+    if pd.isna(domain) or domain.strip() == "" or domain.lower() == "nan":
+        return ""
+
     if not domain.startswith("http"):
         domain = "https://" + domain
         
@@ -147,75 +157,58 @@ def check_pages_and_extract(domain: str, browser) -> str:
     extracted_emails = set()
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
 
-    context = browser.new_context(
-        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    )
-    page = context.new_page()
-
-    for path in paths_to_check:
-        target_url = urljoin(domain, path)
-        print(f"  -> Checking: {target_url}")
+    # 2. The Semaphore "Bouncer": Waits in line until one of the 10 slots opens up
+    async with semaphore: 
         try:
-            # Notice there are no 'await' keywords here
-            page.goto(target_url, wait_until="networkidle", timeout=50000)
-            page_html = page.content()
+            page = await context.new_page()
             
-            matches = re.findall(email_pattern, page_html)
-            
-            valid_emails = [
-                m for m in matches 
-                if not m.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.svg'))
-            ]
-            
-            extracted_emails.update(valid_emails)
-            
-        except Exception as e:
-            print(f"  -> Skipped {target_url} (Error/Timeout)")
-            continue
+            # Block heavy resources instantly to save bandwidth and RAM
+            await page.route("**/*", lambda route: route.abort() 
+                if route.request.resource_type in ["image", "stylesheet", "media", "font", "other"] 
+                else route.continue_()
+            )
 
-    context.close()
+            for path in paths_to_check:
+                target_url = urljoin(domain, path)
+                print(f"  -> [Async] Checking: {target_url}")
+                try:
+                    # 'domcontentloaded' and 15s timeout for maximum speed
+                    await page.goto(target_url, wait_until="domcontentloaded", timeout=15000)
+                    page_html = await page.content()
+                    
+                    matches = re.findall(email_pattern, page_html)
+                    valid_emails = [
+                        m for m in matches 
+                        if not m.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.svg'))
+                    ]
+                    extracted_emails.update(valid_emails)
+                    
+                    if extracted_emails:
+                        print(f"  -> [Async] Success! Skipping remaining pages for {domain}")
+                        break
+                        
+                except Exception:
+                    # Silently skip timeouts to keep the logs clean
+                    continue
+        finally:
+            # ALWAYS close the tab to free up RAM, even if the scrape failed
+            await page.close() 
+
     return ", ".join(extracted_emails)
 
-def verify_email_with_hunter(extracted_emails: str) -> str:
-    """
-    Sends the extracted email to Hunter.io to verify if it is safe to send to.
-    If multiple emails were found, it verifies the first one to save API credits.
-    """
-    if not extracted_emails or not HUNTER_API_KEY:
-        return "Not Verified"
-        
-    # Grab the first email from the comma-separated list
-    first_email = extracted_emails.split(",")[0].strip()
-    
-    url = f"https://api.hunter.io/v2/email-verifier?email={first_email}&api_key={HUNTER_API_KEY}"
-    
-    try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            # Hunter returns status as: "valid", "invalid", "accept_all", or "webmail"
-            status = data.get("data", {}).get("status", "unknown")
-            return status.capitalize()
-        else:
-            return f"API Error: {response.status_code}"
-    except Exception as e:
-        print(f"Hunter API connection failed: {e}")
-        return "Verification Failed"
-
-
 @app.post("/api/extract/")
-def extract_emails_endpoint(
+async def extract_emails_endpoint(
     file: UploadFile = File(...),
     user_email: str = Depends(get_current_user) 
 ):
-    print(f"\n--- User {user_email} started an extraction task ---")
+    print(f"\n--- User {user_email} started an ASYNC extraction task ---")
     
     if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="Invalid file format. Please upload an Excel file.")
+        raise HTTPException(status_code=400, detail="Invalid file format.")
 
     try:
-        # 1. Read the uploaded Excel file synchronously
-        contents = file.file.read()
+        # Read file asynchronously
+        contents = await file.read()
         df = pd.read_excel(io.BytesIO(contents))
         
         if 'Email' not in df.columns:
@@ -225,52 +218,55 @@ def extract_emails_endpoint(
 
         domain_col_name = 'Domains' if 'Domains' in df.columns else df.columns[1]
 
-        results_email = []
-        results_status = []
-        results_verification = [] # <-- NEW LIST FOR HUNTER STATUS
-
-        print("Starting extraction process...")
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+        print(f"Starting async extraction process for {len(df)} domains...")
+        
+        # 1. Boot up the Async Playwright engine
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
             
+            # Create ONE shared browser context (like an incognito window) for all tabs
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            
+            # Allow maximum 10 concurrent tabs open at once
+            semaphore = asyncio.Semaphore(10) 
+            
+            # 2. Build the task list
+            tasks = []
             for index, row in df.iterrows():
                 domain = str(row[domain_col_name])
-                
-                if pd.isna(domain) or domain.strip() == "" or domain.lower() == "nan":
-                    results_email.append("")
-                    results_status.append("")
-                    results_verification.append("") # <-- Keep rows aligned
-                    continue
-                    
-                print(f"Scanning: {domain}")
-                emails = check_pages_and_extract(domain, browser)
-                
-                results_email.append(emails)
-                
-                if emails: 
-                    results_status.append("Found")
-                    # --- CALL HUNTER.IO HERE ---
-                    print(f"Verifying email with Hunter.io...")
-                    verification = verify_email_with_hunter(emails)
-                    results_verification.append(verification)
-                else:
-                    results_status.append("Not Found")
-                    results_verification.append("N/A")
-                
-            browser.close()
+                # We don't 'await' here yet. We are just adding them to a queue.
+                tasks.append(check_pages_and_extract_async(domain, context, semaphore))
+            
+            # 3. EXECUTING THE BATCH: Run all tasks concurrently!
+            # gather() smartly keeps everything in the exact original Excel row order
+            results_email = await asyncio.gather(*tasks)
+            
+            # Clean up the browser
+            await context.close()
+            await browser.close()
 
-        # Update the DataFrame with the new columns
+        # 4. Process the Status Column based on the results
+        results_status = []
+        for i, email in enumerate(results_email):
+            domain = str(df.iloc[i][domain_col_name])
+            if pd.isna(domain) or domain.strip() == "" or domain.lower() == "nan":
+                results_status.append("")
+            elif email:
+                results_status.append("Found")
+            else:
+                results_status.append("Not Found")
+
         df['Email'] = results_email
         df['Status'] = results_status
-        df['Verification Status'] = results_verification # <-- ADD NEW COLUMN TO EXCEL
 
         output_stream = io.BytesIO()
         df.to_excel(output_stream, index=False, engine='openpyxl')
         output_stream.seek(0)
 
-        # 6. Return the file to the React frontend
         headers = {
-            'Content-Disposition': 'attachment; filename="extracted_emails.xlsx"',
+            'Content-Disposition': 'attachment; filename="extracted_emails_fast.xlsx"',
             'Access-Control-Expose-Headers': 'Content-Disposition' 
         }
         return StreamingResponse(
