@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Extractor.css';
 
-//const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
-const baseUrl = " http://127.0.0.1:8000";
+const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+//const baseUrl = " http://127.0.0.1:8000";
 
 function Extractor() {
   const [file, setFile] = useState(null);
