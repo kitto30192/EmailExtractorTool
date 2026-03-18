@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import extractorImage from './extractor-bg.png';
 
-const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+const baseUrl = "https://babluprajapati3019-Email-Extractor-v2.hf.space";
 //const baseUrl = " http://127.0.0.1:8000";
 
 function Login() {

@@ -5,7 +5,7 @@ import Extractor from './components/Extractor';
 
 
 
-const baseUrl = "https://babluprajapati3019-email-extractor-api.hf.space";
+const baseUrl = "https://babluprajapati3019-Email-Extractor-v2.hf.space";
 //const baseUrl = " http://127.0.0.1:8000";
 
 // New component to verify the HttpOnly cookie with the backend
