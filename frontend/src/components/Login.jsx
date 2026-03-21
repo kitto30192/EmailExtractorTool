@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-import extractorImage from './extractor-bg.png';
 
-const baseUrl = "https://babluprajapati3019-Email-Extractor-v2.hf.space";
-//const baseUrl = " http://127.0.0.1:8000";
+const baseUrl="https://babluprajapati3019-emailextractortool.hf.space"
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -47,16 +45,28 @@ function Login() {
     <div className="login-page-wrapper">
       <div className="login-card">
         
-        {/* Left Panel: Illustration */}
-        {/* Left Panel: Illustration */}
-        <div className="illustration-panel">
-            <img 
-              src={extractorImage} 
-              alt="Email Extractor Concept" 
-              style={{ width: '100%', height: 'auto', objectFit: 'contain' }} 
-            />
+       <div className="illustration-panel" style={{ flexDirection: 'column', textAlign: 'center' }}>
+            <lord-icon
+                src="https://cdn.lordicon.com/ljvjsnvh.json" 
+                trigger="loop" 
+                delay="2000"
+                colors="primary:#272a46,secondary:#e1b372"
+                style={{ width: '250px', height: '250px' }}>
+            </lord-icon>
+            
+            <h3 style={{ 
+              marginTop: '20px', 
+              color: 'var(--navy-bg)', 
+              fontSize: '1.8rem',
+              fontWeight: '600'
+            }}>
+              Glad to see you!
+            </h3>
+            <p style={{ color: '#555', fontSize: '0.9rem', marginTop: '-10px' }}>
+              Sign in to manage your extractions.
+            </p>
         </div>
-        {/* Right Panel: Form */}
+        
         <div className="form-panel">
           <div className="login-header">
             <h2>Welcome!</h2>
@@ -66,11 +76,16 @@ function Login() {
           
           <form onSubmit={handleSubmit} className="login-form">
             
-            {/* Email Input with Icon */}
+           {/* --- PREMIUM ANIMATED EMAIL INPUT --- */}
             <div className="input-group">
-              <svg className="input-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 18H4V8L12 13L20 8V18ZM12 11L4 6H20L12 11Z" />
-              </svg>
+              <div style={{ width: '28px', height: '28px', marginRight: '12px', display: 'flex' }}>
+                  <lord-icon
+                   src="https://cdn.lordicon.com/ozlkyfxg.json"
+                    trigger="hover"
+                   colors="primary:#110a5c,secondary:#e88c30"
+                    style={{ width: '100%', height: '100%' }}> 
+                </lord-icon>
+              </div>
               <input 
                 id="email"
                 type="email" 
@@ -82,15 +97,18 @@ function Login() {
               />
             </div>
 
-            {/* Password Input with Icon */}
+            {/* --- PREMIUM ANIMATED PASSWORD INPUT --- */}
             <div className="input-group">
-              <svg className="input-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM9 6C9 4.34 10.34 3 12 3C13.66 3 15 4.34 15 6V8H9V6ZM18 20H6V10H18V20ZM12 17C13.1 17 14 16.1 14 15C14 13.9 13.1 13 12 13C10.9 13 10 13.9 10 15C10 16.1 10.9 17 12 17Z" />
-              </svg>
+              <lord-icon
+                  src="https://cdn.lordicon.com/dicvhxpz.json"
+                  trigger="hover"
+                  colors="primary:#272a46,secondary:#e1b372"
+                  style={{ width: '28px', height: '28px', marginRight: '12px' }}>
+              </lord-icon>
               <input 
                 id="password"
                 type="password" 
-                placeholder="Create password" 
+                placeholder="Enter password" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 required 
@@ -98,7 +116,6 @@ function Login() {
               />
             </div>
 
-            {/* Side-by-Side Buttons */}
             <div className="button-group">
               <button 
                 type={!isLogin ? "submit" : "button"} 

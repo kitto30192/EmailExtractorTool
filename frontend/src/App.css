@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap');
+
+:root {
+  --navy-bg: #272A46;
+  --cream-bg: #FCF7EE;
+  --gold-accent: #E1B372;
+  --text-dark: #272A46;
+  --text-light: #FCF7EE;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--navy-bg);
+  color: var(--text-light);
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+}
+
+/* Base heading style for the whole app */
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+  color: var(--gold-accent);
+}

@@ -3,12 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Extractor from './components/Extractor';
 
+const baseUrl="https://babluprajapati3019-emailextractortool.hf.space"
 
-
-const baseUrl = "https://babluprajapati3019-Email-Extractor-v2.hf.space";
-//const baseUrl = " http://127.0.0.1:8000";
-
-// New component to verify the HttpOnly cookie with the backend
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
@@ -16,7 +12,6 @@ const ProtectedRoute = ({ children }) => {
     const verifyUser = async () => {
       try {
         const response = await fetch(`${baseUrl}/api/verify/`, {
-          // This line is MANDATORY for cookies
           credentials: 'include' 
         });
         
@@ -33,7 +28,7 @@ const ProtectedRoute = ({ children }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>; // Show while checking
+    return <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--gold-accent)' }}>Loading...</div>;
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -42,6 +37,7 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <BrowserRouter>
+      
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route 

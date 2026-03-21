@@ -1,23 +1,24 @@
-# 1. Use the official Playwright image (This already contains all the complex Linux dependencies for Chrome!)
-FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+# 1. Use an official Python image
+FROM python:3.10
 
-# 2. Set the folder inside the server where our code will live
-WORKDIR /app
+# 2. Set the working directory inside the container
+WORKDIR /code
 
-# 3. Copy our requirements file first
-COPY requirements.txt .
+# 3. Copy your requirements file first
+# Based on your screenshot, it's inside the app/ folder
+COPY ./app/requirements.txt /code/requirements.txt
 
-# 4. Install our Python packages
-RUN pip install --no-cache-dir -r requirements.txt
+# 4. Install standard Python dependencies
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# 5. Install the Chromium browser
-RUN playwright install chromium
+# 5. CRITICAL FOR PLAYWRIGHT: Install the Chromium browser and its system dependencies
+RUN playwright install --with-deps chromium
 
-# 6. Copy the rest of our backend code into the server
-COPY . .
+# 6. Copy all your files into the container
+COPY . /code
 
-# 7. Hugging Face requires apps to run on port 7860
+# 7. Expose the specific port Hugging Face requires
 EXPOSE 7860
 
-# 8. The command to start your FastAPI server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# 8. Command to run your application
+CMD ["python", "run.py"]
