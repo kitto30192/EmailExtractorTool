@@ -5,7 +5,9 @@ import pandas as pd
 from urllib.parse import urlparse, urljoin
 from playwright.async_api import async_playwright
 from app.database import jobs_collection
-from datetime import datetime
+from datetime import datetime , timezone, timedelta
+local_tz = timezone(timedelta(hours=5, minutes=30))
+import gc
 
 # --- SMART FILTERS ---
 JUNK_DOMAINS = ['sentry', 'wixpress', 'example.com', 'domain.com', 'yoursite.com', 'test.com', 'wix.com', 'name.com']
@@ -106,7 +108,6 @@ async def check_pages_and_extract_async(domain: str, browser, semaphore) -> tupl
 
 async def process_excel_job_background(task_id: str, input_filepath: str, output_filepath: str):
     """Background task to process multiple sheets and update DB progress."""
-    
     try:
         excel_file = pd.ExcelFile(input_filepath)
         sheet_names = excel_file.sheet_names
@@ -115,75 +116,109 @@ async def process_excel_job_background(task_id: str, input_filepath: str, output
         # Prepare an Excel writer for the final output
         writer = pd.ExcelWriter(output_filepath, engine='openpyxl')
         
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            semaphore = asyncio.Semaphore(10)
+        for index, sheet in enumerate(sheet_names, start=1):
+            # Update DB: Working on current sheet
+            time_now = datetime.now(local_tz).strftime('%I:%M:%S %p').lower()
+            jobs_collection.update_one(
+                {"task_id": task_id},
+                {"$push": {"logs": f"[{time_now}] Working on Sheet {index} ('{sheet}')..."}}
+            )
             
-            for index, sheet in enumerate(sheet_names, start=1):
-                # Update DB: Working on current sheet
-                time_now = datetime.now().strftime('%I:%M:%S %p').lower()
-                jobs_collection.update_one(
-                    {"task_id": task_id},
-                    {"$push": {"logs": f"[{time_now}] Working on Sheet {index} ('{sheet}')..."}}
-                )
-                
-                df = pd.read_excel(input_filepath, sheet_name=sheet)
-                
-                # --- VALIDATION 1: Exact Columns Check ---
-                expected_columns = ['SRL', 'Domains', 'Email', 'Status']
-                if list(df.columns) != expected_columns:
-                    time_now = datetime.now().strftime('%I:%M:%S %p').lower()
-                    error_msg = f"[{time_now}] Sheet {index} ('{sheet}') skipped: Incorrect format. Expected exactly ['SLR', 'Domains', 'Email', 'Status']."
-                    jobs_collection.update_one({"task_id": task_id}, {"$push": {"logs": error_msg}})
-                    df.to_excel(writer, sheet_name=sheet, index=False)
-                    continue
-
-                # --- VALIDATION 2: Row Limit Check ---
-                if len(df) > 500:
-                    error_msg = f"Sheet {index} ('{sheet}') skipped: Exceeds 500 domains limit (found {len(df)})."
-                    jobs_collection.update_one({"task_id": task_id}, {"$push": {"logs": error_msg}})
-                    df.to_excel(writer, sheet_name=sheet, index=False) # Save original unedited
-                    continue
-
-                df['Domains'] = df['Domains'].fillna("").astype(str)
-                df['Email'] = df['Email'].fillna("").astype(str)
-                df['Status'] = df['Status'].fillna("").astype(str)
-
-                # --- EXTRACTION PROCESS ---
-                tasks = []
-                for _, row in df.iterrows():
-                    domain = str(row['Domains'])
-                    tasks.append(check_pages_and_extract_async(domain, browser, semaphore))
-
-                # Run batch
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-
-                # Process results safely
-                for i, res in enumerate(results):
-                    domain = str(df.iloc[i]['Domains'])
-                    if pd.isna(domain) or domain.strip() == "" or domain.lower() == "nan":
-                        continue
-                        
-                    if isinstance(res, Exception):
-                        df.at[i, 'Status'] = f"System Error: {str(res)[:30]}"
-                    else:
-                        # res is now a tuple: (emails, reason)
-                        extracted_emails, status_reason = res
-                        
-                        df.at[i, 'Email'] = extracted_emails
-                        df.at[i, 'Status'] = status_reason # Write the specific reason to the Excel sheet!
-
-                # Save the processed sheet to the new Excel file
+            df = pd.read_excel(input_filepath, sheet_name=sheet)
+            
+            # --- CRITICAL FIX: DROP EMPTY GHOST ROWS ---
+            df = df.dropna(how='all') 
+            
+            # --- VALIDATION 1: Exact Columns Check ---
+            expected_columns = ['SRL', 'Domains', 'Email', 'Status']
+            if list(df.columns) != expected_columns:
+                time_now = datetime.now(local_tz).strftime('%I:%M:%S %p').lower()
+                error_msg = f"[{time_now}] Sheet {index} ('{sheet}') skipped: Incorrect format. Expected exactly ['SRL', 'Domains', 'Email', 'Status']."
+                jobs_collection.update_one({"task_id": task_id}, {"$push": {"logs": error_msg}})
                 df.to_excel(writer, sheet_name=sheet, index=False)
+                continue
+
+            # --- VALIDATION 2: Row Limit Check ---
+            if len(df) > 500:
+                error_msg = f"Sheet {index} ('{sheet}') skipped: Exceeds 500 domains limit (found {len(df)})."
+                jobs_collection.update_one({"task_id": task_id}, {"$push": {"logs": error_msg}})
+                df.to_excel(writer, sheet_name=sheet, index=False) 
+                continue
+
+            df['Domains'] = df['Domains'].fillna("").astype(str)
+            df['Email'] = df['Email'].fillna("").astype(str)
+            df['Status'] = df['Status'].fillna("").astype(str)
+
+            # ==========================================
+            # --- THE MEMORY SAVER: BATCH PROCESSING ---
+            # ==========================================
+            BATCH_SIZE = 25
+            
+            # Loop through the dataframe in chunks of 50
+            for batch_start in range(0, len(df), BATCH_SIZE):
+                batch_df = df.iloc[batch_start:batch_start+BATCH_SIZE]
                 
-                # Update DB: Sheet complete
-                time_now = datetime.now().strftime('%I:%M:%S %p').lower()
+                # Log the batch progress to the frontend!
+                time_now = datetime.now(local_tz).strftime('%I:%M:%S %p').lower()
                 jobs_collection.update_one(
                     {"task_id": task_id},
-                    {"$push": {"logs": f"[{time_now}] Sheet {index} ('{sheet}') completed successfully."}}
+                    {"$push": {"logs": f"[{time_now}] Processing batch {batch_start + 1} to {min(batch_start + BATCH_SIZE, len(df))}..."}}
                 )
 
-            await browser.close()
+                # Start a fresh browser for EVERY batch to keep RAM at ~2GB
+                async with async_playwright() as p:
+                    browser = await p.chromium.launch(
+                        headless=True,
+                        args=[
+                            '--disable-dev-shm-usage', # Prevents Docker memory crash
+                            '--no-sandbox',            
+                            '--disable-gpu',           
+                            '--disk-cache-size=0'      # Stops cache hoarding
+                        ]
+                    )
+                    semaphore = asyncio.Semaphore(3)
+                    
+                    tasks = []
+                    for _, row in batch_df.iterrows():
+                        domain = str(row['Domains'])
+                        tasks.append(check_pages_and_extract_async(domain, browser, semaphore))
+
+                    # Run this specific batch of 50
+                    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                    # Process results safely
+                    for i, res in enumerate(results):
+                        # Calculate the exact row number in the main Excel sheet
+                        real_index = batch_start + i 
+                        
+                        domain = str(df.iloc[real_index]['Domains'])
+                        if pd.isna(domain) or domain.strip() == "" or domain.lower() == "nan":
+                            continue
+                            
+                        if isinstance(res, Exception):
+                            df.at[real_index, 'Status'] = f"System Error: {str(res)[:30]}"
+                        else:
+                            extracted_emails, status_reason = res
+                            df.at[real_index, 'Email'] = extracted_emails
+                            df.at[real_index, 'Status'] = status_reason
+
+                    # Close the browser to completely wipe the RAM clean!
+                    await browser.close()
+
+                gc.collect()
+                
+                # A tiny 2-second cooldown to let the server's CPU catch its breath
+                await asyncio.sleep(5)
+
+            # Save the processed sheet to the new Excel file
+            df.to_excel(writer, sheet_name=sheet, index=False)
+            
+            # Update DB: Sheet complete
+            time_now = datetime.now(local_tz).strftime('%I:%M:%S %p').lower()
+            jobs_collection.update_one(
+                {"task_id": task_id},
+                {"$push": {"logs": f"[{time_now}] Sheet {index} ('{sheet}') completed successfully."}}
+            )
             
         # Save the final multi-sheet file
         writer.close()

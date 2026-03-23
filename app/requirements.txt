@@ -9,3 +9,4 @@ PyJWT
 python-dotenv
 certifi
 python-multipart
+xlrd >=2.0.1
